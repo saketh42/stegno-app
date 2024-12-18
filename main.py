@@ -1,33 +1,42 @@
-from src.encrypt import generate_keypair
+from src.encrypt import generate_keypair, mod_inverse
 from src.encoding import encode_image
 from src.decoding import decode_image
 
 def main():
     while True:
         print("\n--- RSA Steganography Tool ---")
-        print("1. Encode Message")
-        print("2. Decode Message")
-        print("3. Exit")
+        print("1. Generate Keys")
+        print("2. Encode Message")
+        print("3. Decode Message")
+        print("4. Exit")
         
-        choice = input("Enter your choice (1/2/3): ")
+        choice = input("Enter your choice (1/2/3/4): ")
         
-        # Encoding
         if choice == '1':
             # Generating key pair
             public_key, private_key = generate_keypair()
+            print("Public Key (for encryption):", public_key)
+            print("Private Key (for decryption):", private_key)
+
+
+        # Encoding
+        elif choice == '2':
             
             # Input for the image and the msg
             input_image = input("Enter input image path: ")
             message = input("Enter message to hide: ")
-            
+            e = int(input("Enter public key e: "))
+            n = int(input("Enter public key n: "))
+            public_key = (e, n)
+
             try:
-                encode_image(input_image, message, public_key, 'output.png')        # output.png is the output file name
-                print("Private Key (for decryption):", private_key)
+                encode_image(input_image, message, public_key, 'output.png')            # output.png is the output file name
+
             except Exception as e:
                 print(f"Encoding error: {e}")
         
         # Decoding
-        elif choice == '2':
+        elif choice == '3':
             # Input for the image to decode
             input_image = input("Enter image with hidden message: ")
             
@@ -42,7 +51,7 @@ def main():
             except Exception as e:
                 print(f"Decoding error: {e}")
         
-        elif choice == '3':
+        elif choice == '4':
             print("Exiting...")
             break
         
