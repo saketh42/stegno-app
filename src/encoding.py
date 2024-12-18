@@ -2,15 +2,7 @@ from PIL import Image
 from src.encrypt import encrypt
 
 def encode_image(input_image_path, secret_message, public_key, output_image_path):
-    """
-    Encrypt and hide a secret message inside an image
-    
-    Args:
-        input_image_path (str): Path to the original image
-        secret_message (str): Message to hide
-        public_key (tuple): RSA public key
-        output_image_path (str): Path to save the modified image
-    """
+
     # First encrypt the message with RSA
     encrypted_message = encrypt(secret_message, public_key)
     

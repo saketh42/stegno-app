@@ -1,7 +1,6 @@
 import random
 
 def is_prime(n):
-    """Check if a number is prime"""
     if n < 2:
         return False
     for i in range(2, int(n**0.5) + 1):
@@ -10,17 +9,14 @@ def is_prime(n):
     return True
 
 def find_primes(start, end):
-    """Find prime numbers in a range"""
     return [p for p in range(start, end) if is_prime(p)]
 
 def gcd(a, b):
-    """Calculate Greatest Common Divisor"""
     while b:
         a, b = b, a % b
     return a
 
 def mod_inverse(e, phi):
-    """Calculate modular multiplicative inverse"""
     def extended_gcd(a, b):
         if a == 0:
             return b, 0, 1
@@ -35,16 +31,6 @@ def mod_inverse(e, phi):
         return x % phi
 
 def encrypt(message, public_key):
-    """
-    Encrypt message using RSA public key
-    
-    Args:
-        message (str): Message to encrypt
-        public_key (tuple): (e, n)
-    
-    Returns:
-        list: Encrypted message as list of integers
-    """
     e, n = public_key
     # Convert message to list of character codes
     cipher = []
@@ -54,16 +40,6 @@ def encrypt(message, public_key):
     return cipher
 
 def generate_keypair(p=None, q=None):
-    """
-    Generate RSA public and private keys
-    
-    Args:
-        p (int, optional): First prime number
-        q (int, optional): Second prime number
-    
-    Returns:
-        tuple: ((public_key, n), (private_key, n))
-    """
     # If primes not provided, choose randomly
     if p is None or q is None:
         primes = find_primes(100, 500)
