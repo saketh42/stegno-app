@@ -1,5 +1,5 @@
 from PIL import Image
-from encrypt import encrypt
+from src.encrypt import encrypt
 
 def encode_image(input_image_path, secret_message, public_key, output_image_path):
     """

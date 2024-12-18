@@ -1,5 +1,5 @@
 from PIL import Image
-from decrypt import decrypt
+from src.decrypt import decrypt
 
 def decode_image(image_path, private_key):
     """
