@@ -1,15 +1,13 @@
 def decrypt(cipher, private_key):
-    """
-    Decrypt message using RSA private key
-    
-    Args:
-        cipher (list): Encrypted message
-        private_key (tuple): (d, n)
-    
-    Returns:
-        str: Decrypted message
-    """
+    # private exponent and modulus
     d, n = private_key
+
     # Decrypt each number back to character
-    message = ''.join(chr(pow(char, d, n)) for char in cipher)
+    message = ''.join(
+        chr(
+            pow(char, d, n)  # Decrypt each character using RSA: m = c^d mod n
+        )   
+        for char in cipher  # Iterate over each encrypted character in the cipher
+    )
+
     return message
