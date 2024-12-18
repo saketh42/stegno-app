@@ -1,24 +1,16 @@
-from PIL import Image
+from PIL import Image                              # Pillow Imaging Library: Image processing
 from src.decrypt import decrypt
 
 def decode_image(image_path, private_key):
-    """
-    Extract and decrypt hidden message from an image
-    
-    Args:
-        image_path (str): Path to the image with hidden message
-        private_key (tuple): RSA private key
-    
-    Returns:
-        str: Decrypted original message
-    """
     # Open the image
     image = Image.open(image_path)
+
+    # Convert to RGB Channel to convert to binary
     image = image.convert('RGB')
     
-    # Extract binary data
+    # Extract pixel data of pixels
     pixels = list(image.getdata())
-    binary_message = ''
+    binary_message = ''                           # Extracted Data
     
     # Decoding process
     for pixel in pixels:
@@ -32,10 +24,10 @@ def decode_image(image_path, private_key):
         if '1111111111111110' in binary_message:
             break
     
-    # Extract message length
+    # Extract message length - first 16 bits of the encoded msg is len of the msg
     message_length = int(binary_message[:16], 2)
     
-    # Extract actual encrypted message
+    # Extract actual encrypted message - last 16 bits are the delimiters
     binary_message = binary_message[16:-16]
     
     # Convert binary to encrypted text
@@ -47,5 +39,5 @@ def decode_image(image_path, private_key):
     # Convert back to list of integers
     encrypted_message = list(map(int, encrypted_str.split(',')))
     
-    # Decrypt the message
+    # Return the msg after decrypting the message
     return decrypt(encrypted_message, private_key)
