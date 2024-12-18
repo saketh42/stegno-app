@@ -1,34 +1,148 @@
 from PIL import Image
-import os
+import random
 
-class SteganographyTool:
+class RSASteganographyTool:
     @staticmethod
-    def encode_image(input_image_path, secret_message, output_image_path):
+    def is_prime(n):
+        """Check if a number is prime"""
+        if n < 2:
+            return False
+        for i in range(2, int(n**0.5) + 1):
+            if n % i == 0:
+                return False
+        return True
+
+    @staticmethod
+    def find_primes(start, end):
+        """Find prime numbers in a range"""
+        return [p for p in range(start, end) if RSASteganographyTool.is_prime(p)]
+
+    @staticmethod
+    def gcd(a, b):
+        """Calculate Greatest Common Divisor"""
+        while b:
+            a, b = b, a % b
+        return a
+
+    @staticmethod
+    def mod_inverse(e, phi):
+        """Calculate modular multiplicative inverse"""
+        def extended_gcd(a, b):
+            if a == 0:
+                return b, 0, 1
+            else:
+                gcd, x, y = extended_gcd(b % a, a)
+                return gcd, y - (b // a) * x, x
+
+        gcd, x, _ = extended_gcd(e, phi)
+        if gcd != 1:
+            raise ValueError('Modular inverse does not exist')
+        else:
+            return x % phi
+
+    @staticmethod
+    def generate_keypair(p=None, q=None):
         """
-        Hide a secret message inside an image
+        Generate RSA public and private keys
+        
+        Args:
+            p (int, optional): First prime number
+            q (int, optional): Second prime number
+        
+        Returns:
+            tuple: ((public_key, n), (private_key, n))
+        """
+        # If primes not provided, choose randomly
+        if p is None or q is None:
+            primes = RSASteganographyTool.find_primes(100, 500)
+            p = primes[random.randint(0, len(primes)//2)]
+            q = primes[random.randint(len(primes)//2, len(primes)-1)]
+        
+        # Compute n and phi
+        n = p * q
+        phi = (p-1) * (q-1)
+        
+        # Choose e (public key)
+        e = random.randrange(1, phi)
+        while RSASteganographyTool.gcd(e, phi) != 1:
+            e = random.randrange(1, phi)
+        
+        # Compute private key
+        d = RSASteganographyTool.mod_inverse(e, phi)
+        
+        return ((e, n), (d, n))
+
+    @staticmethod
+    def encrypt(message, public_key):
+        """
+        Encrypt message using RSA public key
+        
+        Args:
+            message (str): Message to encrypt
+            public_key (tuple): (e, n)
+        
+        Returns:
+            list: Encrypted message as list of integers
+        """
+        e, n = public_key
+        # Convert message to list of character codes
+        cipher = []
+        for char in message:
+            # Encrypt each character
+            cipher.append(pow(ord(char), e, n))
+        return cipher
+
+    @staticmethod
+    def decrypt(cipher, private_key):
+        """
+        Decrypt message using RSA private key
+        
+        Args:
+            cipher (list): Encrypted message
+            private_key (tuple): (d, n)
+        
+        Returns:
+            str: Decrypted message
+        """
+        d, n = private_key
+        # Decrypt each number back to character
+        message = ''.join(chr(pow(char, d, n)) for char in cipher)
+        return message
+
+    @staticmethod
+    def encode_image(input_image_path, secret_message, public_key, output_image_path):
+        """
+        Encrypt and hide a secret message inside an image
         
         Args:
             input_image_path (str): Path to the original image
             secret_message (str): Message to hide
+            public_key (tuple): RSA public key
             output_image_path (str): Path to save the modified image
         """
+        # First encrypt the message with RSA
+        encrypted_message = RSASteganographyTool.encrypt(secret_message, public_key)
+        
+        # Convert encrypted message to string for steganography
+        encrypted_str = ','.join(map(str, encrypted_message))
+        
         # Open the image
         image = Image.open(input_image_path)
         
         # Convert image to RGB mode to ensure compatibility
         image = image.convert('RGB')
         
-        # Convert message to binary
-        binary_message = ''.join(format(ord(char), '08b') for char in secret_message)
+        # Convert encrypted message to binary
+        binary_message = ''.join(format(ord(char), '08b') for char in encrypted_str)
         
         # Add message length and delimiter
-        binary_message = f"{len(secret_message):016b}" + binary_message + '1111111111111110'
+        binary_message = f"{len(encrypted_str):016b}" + binary_message + '1111111111111110'
         
         # Check if the message fits in the image
         width, height = image.size
         max_bytes = width * height * 3 // 8  # 3 channels, 1 bit per channel
         if len(binary_message) // 8 > max_bytes:
-            raise ValueError("Message too large for this image")
+            raise ValueError("Encrypted message too large for this image")
         
         # Create a copy of the image pixels
         pixels = list(image.getdata())
@@ -65,18 +179,19 @@ class SteganographyTool:
         
         # Save the encoded image
         encoded_image.save(output_image_path)
-        print(f"Message encoded in {output_image_path}")
+        print(f"Encrypted message encoded in {output_image_path}")
 
     @staticmethod
-    def decode_image(image_path):
+    def decode_image(image_path, private_key):
         """
-        Extract hidden message from an image
+        Extract and decrypt hidden message from an image
         
         Args:
             image_path (str): Path to the image with hidden message
+            private_key (tuple): RSA private key
         
         Returns:
-            str: Decoded secret message
+            str: Decrypted original message
         """
         # Open the image
         image = Image.open(image_path)
@@ -101,47 +216,67 @@ class SteganographyTool:
         # Extract message length
         message_length = int(binary_message[:16], 2)
         
-        # Extract actual message
+        # Extract actual encrypted message
         binary_message = binary_message[16:-16]
         
-        # Convert binary to text
-        message = ''
+        # Convert binary to encrypted text
+        encrypted_str = ''
         for i in range(0, message_length * 8, 8):
             byte = binary_message[i:i+8]
-            message += chr(int(byte, 2))
+            encrypted_str += chr(int(byte, 2))
         
-        return message
+        # Convert back to list of integers
+        encrypted_message = list(map(int, encrypted_str.split(',')))
+        
+        # Decrypt the message
+        return RSASteganographyTool.decrypt(encrypted_message, private_key)
 
 def main():
     while True:
-        print("\n--- Steganography Tool ---")
-        print("1. Encode Message")
-        print("2. Decode Message")
-        print("3. Exit")
+        print("\n--- RSA Steganography Tool ---")
+        print("1. Generate Key Pair")
+        print("2. Encode Message")
+        print("3. Decode Message")
+        print("4. Exit")
         
-        choice = input("Enter your choice (1/2/3): ")
+        choice = input("Enter your choice (1/2/3/4): ")
         
         if choice == '1':
+            # Generate key pair
+            public_key, private_key = RSASteganographyTool.generate_keypair()
+            print("Public Key:", public_key)
+            print("Private Key:", private_key)
+        
+        elif choice == '2':
+            # Generate key pair first
+            public_key, private_key = RSASteganographyTool.generate_keypair()
+            
             input_image = input("Enter input image path: ")
             output_image = input("Enter output image path: ")
             message = input("Enter message to hide: ")
             
             try:
-                SteganographyTool.encode_image(input_image, message, output_image)
-                print("Message encoded successfully!")
+                RSASteganographyTool.encode_image(input_image, message, public_key, output_image)
+                print("Encrypted message encoded successfully!")
+                print("Public Key (for decryption):", public_key)
+                print("Private Key (for decryption):", private_key)
             except Exception as e:
                 print(f"Encoding error: {e}")
         
-        elif choice == '2':
+        elif choice == '3':
             input_image = input("Enter image with hidden message: ")
+            # Prompt for private key components
+            d = int(input("Enter private key d: "))
+            n = int(input("Enter private key n: "))
+            private_key = (d, n)
             
             try:
-                message = SteganographyTool.decode_image(input_image)
-                print(f"Decoded Message: {message}")
+                message = RSASteganographyTool.decode_image(input_image, private_key)
+                print(f"Decrypted Message: {message}")
             except Exception as e:
                 print(f"Decoding error: {e}")
         
-        elif choice == '3':
+        elif choice == '4':
             print("Exiting...")
             break
         
