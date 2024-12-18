@@ -1,6 +1,6 @@
-from encrypt import generate_keypair
-from encoding import encode_image
-from decoding import decode_image
+from src.encrypt import generate_keypair
+from src.encoding import encode_image
+from src.decoding import decode_image
 
 def main():
     while True:
@@ -18,12 +18,10 @@ def main():
             public_key, private_key = generate_keypair()
             
             input_image = input("Enter input image path: ")
-            output_image = input("Enter output image path: ")
             message = input("Enter message to hide: ")
             
             try:
-                encode_image(input_image, message, public_key, output_image)
-                print("Encrypted message encoded successfully!")
+                encode_image(input_image, message, public_key, 'output.png')
                 print("Private Key (for decryption):", private_key)
             except Exception as e:
                 print(f"Encoding error: {e}")
