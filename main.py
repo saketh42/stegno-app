@@ -11,23 +11,26 @@ def main():
         
         choice = input("Enter your choice (1/2/3): ")
         
-
-        
+        # Encoding
         if choice == '1':
-            # Generate key pair first
+            # Generating key pair
             public_key, private_key = generate_keypair()
             
+            # Input for the image and the msg
             input_image = input("Enter input image path: ")
             message = input("Enter message to hide: ")
             
             try:
-                encode_image(input_image, message, public_key, 'output.png')
+                encode_image(input_image, message, public_key, 'output.png')        # output.png is the output file name
                 print("Private Key (for decryption):", private_key)
             except Exception as e:
                 print(f"Encoding error: {e}")
         
+        # Decoding
         elif choice == '2':
+            # Input for the image to decode
             input_image = input("Enter image with hidden message: ")
+            
             # Prompt for private key components
             d = int(input("Enter private key d: "))
             n = int(input("Enter private key n: "))
