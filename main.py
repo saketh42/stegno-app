@@ -1,4 +1,4 @@
-from src.encrypt import generate_keypair, mod_inverse
+from src.encrypt import generate_keypair
 from src.encoding import encode_image
 from src.decoding import decode_image
 
@@ -21,7 +21,6 @@ def main():
 
         # Encoding
         elif choice == '2':
-            
             # Input for the image and the msg
             input_image = input("Enter input image path: ")
             message = input("Enter message to hide: ")

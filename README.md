@@ -76,3 +76,5 @@ python main.py
 - Message length is constrained by image size
 - Supports text messages
 - Requires careful private key management
+- No authorisation of the data Picture sent
+- Could be more secure by encrypting into one random channel in the RGB stream

@@ -1,4 +1,4 @@
-from PIL import Image                              # Pillow Imaging Library: Image processing
+from PIL import Image                              # Pillow Imaging Library: Image processing   
 from src.decrypt import decrypt
 
 def decode_image(image_path, private_key):
